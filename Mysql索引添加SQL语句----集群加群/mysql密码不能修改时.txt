@@ -1,0 +1,7 @@
+1:编辑mysql配置文件my.ini（不知道在哪请搜索），在[mysqld]这个条目下加入
+  skip-grant-tables
+
+
+2:mysql -u root -p就可以不用密码登录了
+
+3:mysql> update user set password=password("新密码") where user="root";

@@ -1,0 +1,3 @@
+ALTER  TABLE  example0  ADD  INDEX  index13_name ( name(20) )
+
+ALTER  TABLE  表名  ADD   [ UNIQUE | FULLTEXT | SPATIAL ]   INDEX  索引名（属性名  [ (长度) ]  [ ASC | DESC]）; 

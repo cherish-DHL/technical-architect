@@ -1,0 +1,79 @@
+#!/bin/sh
+#
+# mysql-proxy This script starts and stops the mysql-proxy daemon
+#
+# chkconfig: - 78 30
+# processname: mysql-proxy
+# description: mysql-proxy is a proxy daemon to mysql
+  
+# Source function library.
+. /etc/rc.d/init.d/functions
+  
+#PROXY_PATH=/usr/local/bin
+PROXY_PATH=/opt/mysql-proxy/bin
+  
+prog="mysql-proxy"
+  
+# Source networking configuration.
+. /etc/sysconfig/network
+  
+# Check that networking is up.
+[ ${NETWORKING} = "no" ] && exit 0
+  
+# Set default mysql-proxy configuration.
+#PROXY_OPTIONS="--daemon"
+PROXY_OPTIONS="--admin-username=root --admin-password=password --proxy-read-only-backend-addresses=192.168.10.131:3306 --proxy-backend-addresses=192.168.10.130:3306  --admin-lua-script=/opt/mysql-proxy/lib/mysql-proxy/lua/admin.lua --proxy-lua-script=/opt/mysql-proxy/scripts/rw-splitting.lua"
+PROXY_PID=/opt/mysql-proxy/run/mysql-proxy.pid
+  
+# Source mysql-proxy configuration.
+if [ -f /etc/sysconfig/mysql-proxy ]; then
+		. /etc/sysconfig/mysql-proxy
+fi
+  
+PATH=$PATH:/usr/bin:/usr/local/bin:$PROXY_PATH
+  
+# By default it's all good
+RETVAL=0
+  
+# See how we were called.
+case "$1" in
+  start)
+		# Start daemon.
+		echo -n $"Starting $prog: "
+		$NICELEVEL $PROXY_PATH/mysql-proxy $PROXY_OPTIONS --daemon --pid-file=$PROXY_PID --user=mysql --log-level=warning --log-file=/opt/mysql-proxy/log/mysql-proxy.log
+		RETVAL=$?
+		echo
+		if [ $RETVAL = 0 ]; then
+				touch /var/lock/subsys/mysql-proxy
+		fi
+	   ;;
+  stop)
+		# Stop daemons.
+		echo -n $"Stopping $prog: "
+		killproc $prog
+		RETVAL=$?
+		echo
+		if [ $RETVAL = 0 ]; then
+				rm -f /var/lock/subsys/mysql-proxy
+				rm -f $PROXY_PID
+		fi
+	   ;;
+  restart)
+		$0 stop
+		sleep 3
+		$0 start
+	   ;;
+  condrestart)
+	   [ -e /var/lock/subsys/mysql-proxy ] && $0 restart
+	  ;;
+  status)
+		status mysql-proxy
+		RETVAL=$?
+	   ;;
+  *)
+		echo "Usage: $0 {start|stop|restart|status|condrestart}"
+		RETVAL=1
+	   ;;
+esac
+  
+exit $RETVAL
